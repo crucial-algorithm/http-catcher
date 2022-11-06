@@ -1,4 +1,12 @@
-#Simple HTTP catcher for e2e testing support
+# http-catcher
+Simple http catcher created to support e2e tests
+
+Endpoints:
+|Method | URL | Description |
+|---|---|---|
+|POST | http://localhost:3001/ | Post any payload to be "stored" (previous payload will be overwritten) - tested with JSON payloads only |
+|GET |  http://localhost:3001/ | Read last message sent with POST |
+|GET |  http://localhost:3001/clear | Clear last message sent (if needed) |
 
 Test locally:
 ```shell
