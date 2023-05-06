@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const multer = require('multer');
 const app = express();
 const port = process.env.PORT || 3001;
 let endpoints = process.env.ENDPOINTS;
@@ -39,9 +40,26 @@ app.post('/', (req, res) => {
 });
 
 if (endpoints.length > 0) console.log('... loading custom endpoints')
-endpoints.map(({method, endpoint, response}) => {
-  console.log(`    ${method.toUpperCase()} ${endpoint}`);
-  app[method.toLowerCase()](endpoint, (req, res) => res.json(response))
+endpoints.map(({method, endpoint, response, sideEffect}) => {
+  console.log(`    ${method.toUpperCase()} ${endpoint} ${sideEffect ? ' with side effect' : ''}`);
+  app[method.toLowerCase()](endpoint, multer().none(), async (req, res) => {
+    if (sideEffect) {
+      const body = req.body;
+      const keys = Object.keys(body);
+      let payload = JSON.stringify(sideEffect.body);
+
+      keys.map((k) => (payload = payload.replace(`{{${k}}}`, body[k])))
+
+      const r = await fetch(sideEffect.url, {
+        method: sideEffect.method,
+        headers: {'Content-Type': 'application/json'},
+        body: payload
+      });
+
+      console.log(`... Side effect response status: ${r.status}; Payload: ${JSON.stringify(payload)}`);
+    }
+    res.json(response)
+  })
 })
 
 app.listen(port, () => {
