@@ -2,6 +2,17 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const port = process.env.PORT || 3001;
+let endpoints = process.env.ENDPOINTS;
+
+if (!endpoints) {
+  endpoints = [];
+} else {
+  endpoints = JSON.parse(endpoints);
+}
+
+if (endpoints.length === 0) {
+  console.log('... No custom endpoints found');
+}
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -27,6 +38,12 @@ app.post('/', (req, res) => {
     res.status(200).send('Stored');
 });
 
+if (endpoints.length > 0) console.log('... loading custom endpoints')
+endpoints.map(({method, endpoint, response}) => {
+  console.log(`    ${method.toUpperCase()} ${endpoint}`);
+  app[method.toLowerCase()](endpoint, (req, res) => res.json(response))
+})
+
 app.listen(port, () => {
-    console.log(`HTTP catcher running at ${port}`)
+    console.log(`... HTTP catcher running at ${port}`)
 });

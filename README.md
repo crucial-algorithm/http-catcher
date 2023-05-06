@@ -20,3 +20,8 @@ Build to push to docker hub:
 docker build --platform linux/amd64  -t filipeutter/http-catcher .
 docker push filipeutter/http-catcher
 ```
+
+Define custom endpoints by setting `ENDPOINTS` enviornment variable
+```shell
+export ENDPOINTS=ENDPOINTS=[ { "method": "post", "endpoint": "/sibs", "response": {"formContext": "zzz", "transactionID": 123456}} ]
+```
