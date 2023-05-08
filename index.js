@@ -42,26 +42,68 @@ app.post('/', (req, res) => {
 if (endpoints.length > 0) console.log('... loading custom endpoints')
 endpoints.map(({method, endpoint, response, sideEffect}) => {
   console.log(`    ${method.toUpperCase()} ${endpoint} ${sideEffect ? ' with side effect' : ''}`);
+
   app[method.toLowerCase()](endpoint, multer().none(), async (req, res) => {
-    if (sideEffect) {
-      const body = req.body;
-      const keys = Object.keys(body);
-      let payload = JSON.stringify(sideEffect.body);
+    // side effects are used to simulate making calls during request
+    await handleSideEffect(sideEffect, req.body);
 
-      keys.map((k) => (payload = payload.replace(`{{${k}}}`, body[k])))
-
-      const r = await fetch(sideEffect.url, {
-        method: sideEffect.method,
-        headers: {'Content-Type': 'application/json'},
-        body: payload
-      });
-
-      console.log(`... Side effect response status: ${r.status}; Payload: ${JSON.stringify(payload)}`);
+    if (response.type === 'redirect') {
+      handleRedirect(response.url, req, res);
+    } else {
+      res.json(JSON.parse(replaceVars(JSON.stringify(response), req.body)));
     }
-    res.json(response)
-  })
+  });
+
 })
 
 app.listen(port, () => {
     console.log(`... HTTP catcher running at ${port}`)
 });
+
+const lookup = function recurse(array,object) {
+  let next = (array.length) ? object[array.shift()] : object;
+  return (next instanceof Object && next[array[0]]) ? recurse(array,next) : next;
+}
+
+/**
+ * A side effect definition
+ * @typedef {{url: string, method: string, body: object}} SideEffect
+ *
+ */
+
+/**
+ *
+ * @param sideEffect SideEffect
+ * @param requestBody Object
+ * @returns {Promise<void>}
+ */
+async function handleSideEffect(sideEffect, requestBody) {
+  if (!sideEffect) return;
+
+  const payload = replaceVars(JSON.stringify(sideEffect.body), requestBody);
+
+  const r = await fetch(sideEffect.url, {
+    method: sideEffect.method,
+    headers: {'Content-Type': 'application/json'},
+    body: payload
+  });
+
+  console.log(`... Side effect response status: ${r.status}; Payload: ${JSON.stringify(payload)}`);
+}
+
+
+function handleRedirect(target, req, res) {
+  res.redirect(replaceVars(target, req.body));
+}
+
+function replaceVars(templateLiteral, vars) {
+  const placeholders = findPlaceHolders(templateLiteral);
+  let result = templateLiteral;
+  placeholders.map((k) => (result = result.replace(`{{${k}}}`, lookup(k.split('.'), vars))));
+
+  return result;
+}
+
+function findPlaceHolders(templateLiteral) {
+  return templateLiteral.match(/\{\{.+?}}/g).map((s) => s.replace('{{', '').replace('}}', ''));
+}
