@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const multer = require('multer');
+const SimpleScheduler = require('./SimpleScheduler');
 const app = express();
 const port = process.env.PORT || 3001;
 let endpoints = process.env.ENDPOINTS;
@@ -60,6 +61,8 @@ app.listen(port, () => {
     console.log(`... HTTP catcher running at ${port}`)
 });
 
+const scheduler = new SimpleScheduler()
+
 const lookup = function recurse(array,object) {
   let next = (array.length) ? object[array.shift()] : object;
   return (next instanceof Object && next[array[0]]) ? recurse(array,next) : next;
@@ -67,14 +70,14 @@ const lookup = function recurse(array,object) {
 
 /**
  * A side effect definition
- * @typedef {{url: string, method: string, body: object}} SideEffect
+ * @typedef {{url: string, method: string, body: object, delay: number}} SideEffect
  *
  */
 
 /**
  *
- * @param sideEffect SideEffect
- * @param requestBody Object
+ * @param {SideEffect} sideEffect
+ * @param {Object} requestBody
  * @returns {Promise<void>}
  */
 async function handleSideEffect(sideEffect, requestBody) {
@@ -82,13 +85,21 @@ async function handleSideEffect(sideEffect, requestBody) {
 
   const payload = replaceVars(JSON.stringify(sideEffect.body), requestBody);
 
-  const r = await fetch(sideEffect.url, {
-    method: sideEffect.method,
-    headers: {'Content-Type': 'application/json'},
-    body: payload
-  });
+  const call = async () => {
+    const r = await fetch(sideEffect.url, {
+      method: sideEffect.method,
+      headers: {'Content-Type': 'application/json'},
+      body: payload
+    });
 
-  console.log(`... Side effect response status: ${r.status}; Payload: ${JSON.stringify(payload)}`);
+    console.log(`... Side effect response status: ${r.status}; Payload: ${JSON.stringify(payload)}`);
+  }
+
+  if (sideEffect.delay) {
+    return scheduler.add({when: Date.now() + sideEffect.delay, call});
+  }
+
+  await call();
 }
 
 
