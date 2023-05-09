@@ -4,6 +4,7 @@ RUN mkdir /app
 WORKDIR /app
 
 ADD index.js ./
+ADD SimpleScheduler.js ./
 ADD package.json package-lock.json ./
 RUN npm install
 
