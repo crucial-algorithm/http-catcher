@@ -34,7 +34,7 @@ module.exports = class SimpleScheduler {
         }
       });
 
-    }, 5000);
+    }, 1000);
 
     this.status = 'running';
   }
