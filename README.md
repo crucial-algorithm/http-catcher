@@ -23,5 +23,5 @@ docker push filipeutter/http-catcher
 
 Define custom endpoints by setting `ENDPOINTS` enviornment variable
 ```shell
-export ENDPOINTS=ENDPOINTS=ENDPOINTS=[ { "method": "post", "endpoint": "/sibs", "response": {"formContext": "zzz", "transactionID": 123456}, "sideEffect": { "url": "http://localhost:3000/wh/sibs", "method": "post", "body": { "merchantTransactionId": "{{merchantTransactionId}}"} } } ]
+export ENDPOINTS=[ { "method": "post", "endpoint": "/sibs", "response": {"formContext": "zzz", "transactionID": 123456}, "sideEffect": { "url": "http://localhost:3000/wh/sibs", "method": "post", "body": { "merchantTransactionId": "{{merchantTransactionId}}"} } } ]
 ```

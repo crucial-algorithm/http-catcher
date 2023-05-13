@@ -70,7 +70,8 @@ const lookup = function recurse(array,object) {
 
 /**
  * A side effect definition
- * @typedef {{url: string, method: string, body: object, delay: number}} SideEffect
+ * @typedef {{key: string, value: string}} SideEffectHeader
+ * @typedef {{url: string, method: string, body: object, delay: number, headers: Array<SideEffectHeader> }} SideEffect
  *
  */
 
@@ -84,11 +85,16 @@ async function handleSideEffect(sideEffect, requestBody) {
   if (!sideEffect) return;
 
   const payload = replaceVars(JSON.stringify(sideEffect.body), requestBody);
+  const headers = { 'Content-Type': 'application/json' };
+
+  if (sideEffect.headers) {
+    sideEffect.headers.map(({key, value}) => headers[key] = replaceVars(value, requestBody));
+  }
 
   const call = async () => {
     const r = await fetch(sideEffect.url, {
       method: sideEffect.method,
-      headers: {'Content-Type': 'application/json'},
+      headers,
       body: payload
     });
 
@@ -116,5 +122,5 @@ function replaceVars(templateLiteral, vars) {
 }
 
 function findPlaceHolders(templateLiteral) {
-  return templateLiteral.match(/\{\{.+?}}/g).map((s) => s.replace('{{', '').replace('}}', ''));
+  return (templateLiteral.match(/\{\{.+?}}/g) || []).map((s) => s.replace('{{', '').replace('}}', ''));
 }
