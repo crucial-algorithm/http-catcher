@@ -42,20 +42,29 @@ app.post('/', (req, res) => {
 
 if (endpoints.length > 0) console.log('... loading custom endpoints')
 endpoints.map(({method, endpoint, response, sideEffect}) => {
-  console.log(`    ${method.toUpperCase()} ${endpoint} ${sideEffect ? ' with side effect' : ''}`);
+  console.log(`    ${method.toUpperCase()} ${processEndpoint(endpoint)} ${sideEffect ? ' with side effect' : ''}`);
 
-  app[method.toLowerCase()](endpoint, multer().none(), async (req, res) => {
+  app[method.toLowerCase()](processEndpoint(endpoint), multer().none(), async (req, res) => {
     // side effects are used to simulate making calls during request
     await handleSideEffect(sideEffect, req.body);
 
     if (response.type === 'redirect') {
       handleRedirect(response.url, req, res);
+    } else if (response.type === 'case') {
+      handleCase(response.options, req, res);
     } else {
       res.json(JSON.parse(replaceVars(JSON.stringify(response), req.body)));
     }
   });
-
 })
+
+function processEndpoint(value) {
+  const placeholders = findPlaceHolders(value);
+
+  placeholders.map((p) => value = value.replace(`{{${p}}}`, `:${p}`));
+
+  return value;
+}
 
 app.listen(port, () => {
     console.log(`... HTTP catcher running at ${port}`)
@@ -72,6 +81,7 @@ const lookup = function recurse(array,object) {
  * A side effect definition
  * @typedef {{key: string, value: string}} SideEffectHeader
  * @typedef {{url: string, method: string, body: object, delay: number, headers: Array<SideEffectHeader> }} SideEffect
+ * @typedef {{test: string, responses: {value: string, response: object}[] }} CaseParams
  *
  */
 
@@ -123,4 +133,20 @@ function replaceVars(templateLiteral, vars) {
 
 function findPlaceHolders(templateLiteral) {
   return (templateLiteral.match(/\{\{.+?}}/g) || []).map((s) => s.replace('{{', '').replace('}}', ''));
+}
+
+/**
+ *
+ * @param {CaseParams} options
+ * @param req
+ * @param res
+ */
+function handleCase(options, req, res) {
+  const { test, responses } = options;
+  let value;
+
+  value = req.params[test] || replaceVars(test, req.body);
+  const response = (responses.find((r) => r.value === value) || { response: null }).response;
+
+  res.json(JSON.parse(replaceVars(JSON.stringify(response), req.body)));
 }
