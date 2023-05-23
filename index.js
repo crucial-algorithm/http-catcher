@@ -81,7 +81,7 @@ const lookup = function recurse(array,object) {
  * A side effect definition
  * @typedef {{key: string, value: string}} SideEffectHeader
  * @typedef {{url: string, method: string, body: object, delay: number, headers: Array<SideEffectHeader> }} SideEffect
- * @typedef {{test: string, responses: {value: string, response: object}[] }} CaseParams
+ * @typedef {{test: string, defaultOption: string, responses: {value: string, response: object}[] }} CaseParams
  *
  */
 
@@ -142,11 +142,15 @@ function findPlaceHolders(templateLiteral) {
  * @param res
  */
 function handleCase(options, req, res) {
-  const { test, responses } = options;
+  const { test, defaultOption, responses } = options;
   let value;
 
   value = req.params[test] || replaceVars(test, req.body);
-  const response = (responses.find((r) => r.value === value) || { response: null }).response;
+  let response = (responses.find((r) => r.value === value) || { response: null }).response;
+
+  if (!response && defaultOption) {
+    response = (responses.find((r) => r.value === defaultOption) || { response: null }).response;
+  }
 
   res.json(JSON.parse(replaceVars(JSON.stringify(response), req.body)));
 }
