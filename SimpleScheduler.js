@@ -19,8 +19,8 @@ module.exports = class SimpleScheduler {
           return;
         }
         console.log('... executing job');
-        await job.call();
         job.executed = true
+        await job.call();
 
       })).then(() => {
 

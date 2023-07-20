@@ -40,6 +40,8 @@ app.post('/', (req, res) => {
     res.status(200).send('Stored');
 });
 
+console.log('... version 20230720-1430');
+
 if (endpoints.length > 0) console.log('... loading custom endpoints')
 endpoints.map(({method, endpoint, response, sideEffect}) => {
   console.log(`    ${method.toUpperCase()} ${processEndpoint(endpoint)} ${sideEffect ? ' with side effect' : ''}`);
