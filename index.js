@@ -34,13 +34,18 @@ app.get('/clear', (req, res) => {
     res.status(200).send('ok');
 });
 
+app.get('/health-check', (req, res) => {
+  message = null;
+  res.status(200).send(getRemoteAddress(req));
+});
+
 
 app.post('/', (req, res) => {
     message = req.body;
     res.status(200).send('Stored');
 });
 
-console.log('... version 20230720-1430');
+console.log('... version 20230721-1404');
 
 if (endpoints.length > 0) console.log('... loading custom endpoints')
 endpoints.map(({method, endpoint, response, sideEffect}) => {
@@ -122,7 +127,8 @@ async function handleSideEffect(sideEffect, requestBody) {
 
 
 function handleRedirect(target, req, res) {
-  res.redirect(replaceVars(target, req.body));
+  console.log(replaceVars(target, {...req.body, requester_ip: getRemoteAddress(req)}));
+  res.redirect(replaceVars(target, {...req.body, requester_ip: getRemoteAddress(req)}));
 }
 
 function replaceVars(templateLiteral, vars) {
@@ -155,4 +161,11 @@ function handleCase(options, req, res) {
   }
 
   res.json(JSON.parse(replaceVars(JSON.stringify(response), req.body)));
+}
+
+
+function getRemoteAddress(req) {
+  const parts = req.socket.remoteAddress.split(/:/g);
+
+  return parts[parts.length - 1];
 }
