@@ -14,9 +14,12 @@ module.exports = class SimpleScheduler {
       console.log(`... running pipeline with ${this.jobs.length} job(s)`);
 
       Promise.all(this.jobs.map(async (job) => {
-        if (Date.now() < job.when || job.executed === true) {
-          console.log('... job will be executed later (or already being executed)');
-          return;
+        if (job.executed === true) {
+          return console.log('... skipping... job already being executed')
+        }
+        
+        if (Date.now() < job.when) {
+          return console.log('... job will be executed later');
         }
         console.log('... executing job');
         job.executed = true

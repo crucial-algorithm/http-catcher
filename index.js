@@ -53,14 +53,14 @@ endpoints.map(({method, endpoint, response, sideEffect}) => {
 
   app[method.toLowerCase()](processEndpoint(endpoint), multer().none(), async (req, res) => {
     // side effects are used to simulate making calls during request
-    await handleSideEffect(sideEffect, req.body);
+    await handleSideEffect(sideEffect, req);
 
     if (response.type === 'redirect') {
       handleRedirect(response.url, req, res);
     } else if (response.type === 'case') {
       handleCase(response.options, req, res);
     } else {
-      res.json(JSON.parse(replaceVars(JSON.stringify(response), req.body)));
+      res.json(JSON.parse(replaceVars(JSON.stringify(response), vars(req))));
     }
   });
 })
@@ -95,17 +95,17 @@ const lookup = function recurse(array,object) {
 /**
  *
  * @param {SideEffect} sideEffect
- * @param {Object} requestBody
+ * @param {Request} req
  * @returns {Promise<void>}
  */
-async function handleSideEffect(sideEffect, requestBody) {
+async function handleSideEffect(sideEffect, req) {
   if (!sideEffect) return;
 
-  const payload = replaceVars(JSON.stringify(sideEffect.body), requestBody);
+  const payload = replaceVars(JSON.stringify(sideEffect.body), vars(req));
   const headers = { 'Content-Type': 'application/json' };
 
   if (sideEffect.headers) {
-    sideEffect.headers.map(({key, value}) => headers[key] = replaceVars(value, requestBody));
+    sideEffect.headers.map(({key, value}) => headers[key] = replaceVars(value, vars(req)));
   }
 
   const call = async () => {
@@ -125,10 +125,17 @@ async function handleSideEffect(sideEffect, requestBody) {
   await call();
 }
 
+/**
+ *
+ * @param {Request} req
+ * @returns {*&{requester_ip: string}}
+ */
+function vars(req) {
+  return {...req.body, requester_ip: getRemoteAddress(req)};
+}
 
 function handleRedirect(target, req, res) {
-  console.log(replaceVars(target, {...req.body, requester_ip: getRemoteAddress(req)}));
-  res.redirect(replaceVars(target, {...req.body, requester_ip: getRemoteAddress(req)}));
+  res.redirect(replaceVars(target, vars(req)));
 }
 
 function replaceVars(templateLiteral, vars) {
@@ -153,14 +160,14 @@ function handleCase(options, req, res) {
   const { test, defaultOption, responses } = options;
   let value;
 
-  value = req.params[test] || replaceVars(test, req.body);
+  value = req.params[test] || replaceVars(test, vars(req));
   let response = (responses.find((r) => r.value === value) || { response: null }).response;
 
   if (!response && defaultOption) {
     response = (responses.find((r) => r.value === defaultOption) || { response: null }).response;
   }
 
-  res.json(JSON.parse(replaceVars(JSON.stringify(response), req.body)));
+  res.json(JSON.parse(replaceVars(JSON.stringify(response), vars(req))));
 }
 
 
