@@ -17,8 +17,13 @@ docker run http-catcher
 
 Build to push to docker hub:
 ```shell
+# latest
 docker build --platform linux/amd64  -t filipeutter/http-catcher .
 docker push filipeutter/http-catcher
+
+# tag
+docker build --platform linux/amd64  -t filipeutter/http-catcher:2.1 .
+docker push filipeutter/http-catcher:2.1
 ```
 
 Define custom endpoints by setting `ENDPOINTS` enviornment variable

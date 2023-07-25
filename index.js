@@ -101,15 +101,16 @@ const lookup = function recurse(array,object) {
 async function handleSideEffect(sideEffect, req) {
   if (!sideEffect) return;
 
-  const payload = replaceVars(JSON.stringify(sideEffect.body), vars(req));
+  const context = vars(req);
+  const payload = replaceVars(JSON.stringify(sideEffect.body), context);
   const headers = { 'Content-Type': 'application/json' };
 
   if (sideEffect.headers) {
-    sideEffect.headers.map(({key, value}) => headers[key] = replaceVars(value, vars(req)));
+    sideEffect.headers.map(({key, value}) => headers[key] = replaceVars(value, context));
   }
 
   const call = async () => {
-    const r = await fetch(sideEffect.url, {
+    const r = await fetch(replaceVars(sideEffect.url, context), {
       method: sideEffect.method,
       headers,
       body: payload
