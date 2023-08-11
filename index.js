@@ -59,6 +59,8 @@ endpoints.map(({method, endpoint, response, sideEffect}) => {
       handleRedirect(response.url, req, res);
     } else if (response.type === 'case') {
       handleCase(response.options, req, res);
+    } else if (response.type === 'payment-status') {
+      res.sendStatus(Number(response.status));
     } else {
       res.json(JSON.parse(replaceVars(JSON.stringify(response), vars(req))));
     }
