@@ -22,27 +22,27 @@ app.use(bodyParser.urlencoded({ extended: false }));
 // parse application/json
 app.use(bodyParser.json());
 
-let message = null;
+let message = [];
 
 
 app.get('/', (req, res) => {
-    res.json(message)
+  res.json(message.pop());
 });
 
 app.get('/clear', (req, res) => {
-    message = null;
-    res.status(200).send('ok');
+  message = [];
+  res.status(200).send('ok');
 });
 
 app.get('/health-check', (req, res) => {
-  message = null;
+  message = [];
   res.status(200).send(getRemoteAddress(req));
 });
 
 
 app.post('/', (req, res) => {
-    message = req.body;
-    res.status(200).send('Stored');
+  message.push(req.body);
+  res.status(200).send('Stored');
 });
 
 console.log('... version 20230721-1404');
