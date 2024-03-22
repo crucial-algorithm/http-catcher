@@ -1,0 +1,180 @@
+[
+  {
+    "method": "post",
+    "endpoint": "/sibs-mock-checkout",
+    "response": {
+      "formContext": "{\"transactionId\": \"{{merchant.merchantTransactionId}}\"}",
+      "expiry": "2099-12-31",
+      "transactionID": "{{merchant.merchantTransactionId}}"
+    }
+  },
+  {
+    "method": "post",
+    "endpoint": "/sibs-mock-form-submit",
+    "response": {
+      "type": "redirect",
+      "url": "http://localhost:3000/checkout/submitted/{{transactionId}}"
+    },
+    "sideEffect": {
+      "delay": 2000,
+      "url": "http://127.0.0.1:3000/wh/sibs",
+      "method": "post",
+      "headers": [
+        { "key": "X-Authentication-Tag", "value": "{{at}}" },
+        { "key": "X-Initialization-Vector", "value": "{{iv}}" },
+        { "key": "Content-Type", "value": "text/plain" }
+      ],
+      "body": "{{message}}"
+    }
+  },
+  {
+    "method": "post",
+    "endpoint": "/sibs-mock-form-submit/cc",
+    "response": {
+      "type": "redirect",
+      "url": "http://localhost:3000/checkout/submitted/{{transactionId}}"
+    },
+    "sideEffect": {
+      "url": "http://127.0.0.1:3000/wh/sibs",
+      "method": "post",
+      "headers": [
+        { "key": "X-Authentication-Tag", "value": "{{at}}" },
+        { "key": "X-Initialization-Vector", "value": "{{iv}}" },
+        { "key": "Content-Type", "value": "text/plain" }
+      ],
+      "body": "{{message}}"
+    }
+  },
+  {
+    "method": "get",
+    "endpoint": "/sibs-status-mock/sGDw53Nv27kbi4SkY500",
+    "response": { "type": "payment-status", "status": 500 }
+  },
+  {
+    "method": "get",
+    "endpoint": "/sibs-status-mock/sGDw53Nv27kbi4SkY502",
+    "response": { "type": "payment-status", "status": 502 }
+  },
+  {
+    "method": "get",
+    "endpoint": "/sibs-status-mock/sGDw53Nv27kbi4SkY503",
+    "response": { "type": "payment-status", "status": 503 }
+  },
+  {
+    "method": "get",
+    "endpoint": "/sibs-status-mock/{{transactionID}}",
+    "response": {
+      "type": "case",
+      "options": {
+        "test": "transactionID",
+        "defaultOption": "reference-paid",
+        "responses": [
+          {
+            "value": "reference-pending",
+            "response": {
+              "merchant": {
+                "terminalId": "57677",
+                "merchantTransactionId": "9LL2vyChygdXKKcy9sKk"
+              },
+              "transactionID": "reference-pending",
+              "amount": { "currency": "EUR", "value": "46.00" },
+              "paymentType": "PREF",
+              "paymentStatus": "Pending",
+              "paymentReference": {
+                "entity": "24000",
+                "reference": "883960846",
+                "paymentEntity": "24000",
+                "amount": { "value": "0.0", "currency": "EUR" },
+                "status": "UNPAID",
+                "expireDate": "2070-01-01T00:00:00.000+01:00"
+              },
+              "paymentMethod": "REFERENCE",
+              "execution": {
+                "endTime": "2023-05-19T10:44:19.578Z",
+                "startTime": "2023-05-19T10:44:17.943Z"
+              },
+              "returnStatus": {
+                "statusCode": "000",
+                "statusMsg": "Success",
+                "statusDescription": "Success"
+              }
+            }
+          },
+          {
+            "value": "reference-paid",
+            "response": {
+              "merchant": {
+                "terminalId": "57677",
+                "merchantTransactionId": "9LL2vyChygdXKKcy9sKk"
+              },
+              "transactionID": "reference-paid",
+              "amount": { "currency": "EUR", "value": "46.00" },
+              "paymentType": "PREF",
+              "paymentStatus": "Success",
+              "paymentReference": {
+                "entity": "24000",
+                "reference": "883960846",
+                "paymentEntity": "24000",
+                "amount": { "value": "46.0", "currency": "EUR" },
+                "status": "PARTPAIDCLS",
+                "expireDate": "2070-01-01T00:00:00.000+01:00"
+              },
+              "paymentMethod": "REFERENCE",
+              "execution": {
+                "endTime": "2023-05-20T15:30:42.504Z",
+                "startTime": "2023-05-20T15:30:41.503Z"
+              },
+              "returnStatus": {
+                "statusCode": "000",
+                "statusMsg": "Success",
+                "statusDescription": "Success"
+              }
+            }
+          },
+          {
+            "value": "reference-expired",
+            "response": {
+              "merchant": {
+                "terminalId": "57677",
+                "merchantTransactionId": "9LL2vyChygdXKKcy9sKk"
+              },
+              "transactionID": "reference-expired",
+              "amount": { "currency": "EUR", "value": "40.00" },
+              "paymentType": "PREF",
+              "paymentStatus": "Declined",
+              "paymentReference": {
+                "status": "UNKN",
+                "expireDate": "2023-05-20T12:22:00.495+01:00"
+              },
+              "paymentMethod": "REFERENCE",
+              "execution": {
+                "endTime": "2023-05-20T11:30:50.639Z",
+                "startTime": "2023-05-20T11:30:49.461Z"
+              },
+              "returnStatus": {
+                "statusCode": "000",
+                "statusMsg": "Success",
+                "statusDescription": "Success"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  {
+    "method": "post",
+    "endpoint": "/bulkgate",
+    "response": {
+      "data": {
+        "status": "accepted",
+        "part_id": ["sms-5mvvwjradnmi"],
+        "number": "351937744117",
+        "channel": "sms",
+        "sms_id": "sms-5mvvwjradnmi",
+        "price": 0,
+        "credit": 0
+      }
+    }
+  }
+]
